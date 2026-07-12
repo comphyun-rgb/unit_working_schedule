@@ -155,12 +155,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-8 px-4 text-slate-900">
+    <div className="w-full py-4 text-slate-900">
       {/* Header Title */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">근무 일정 등록</h1>
-          <p className="text-slate-600 mt-2 text-sm">마이데이터유닛의 일일 근무 현황을 간편하게 등록하세요.</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">근무 일정 등록</h1>
+          <p className="text-slate-600 mt-1 text-sm">마이데이터유닛의 일일 근무 현황을 간편하게 등록하세요.</p>
         </div>
         <div className="shrink-0">
           <button
@@ -175,7 +175,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Registration Form Card */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-xl flex flex-col gap-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-xl flex flex-col gap-6 w-full">
         
         {/* Section 1: Basic Information */}
         <section className="space-y-4">

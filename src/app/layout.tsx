@@ -32,7 +32,7 @@ export default function RootLayout({
             </nav>
           </div>
         </header>
-        <main className="flex-1 w-full p-4 md:p-12">
+        <main className="flex-1 w-full p-2 md:p-4">
           {children}
         </main>
       </body>
