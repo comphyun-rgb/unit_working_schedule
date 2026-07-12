@@ -155,7 +155,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="max-w-[600px] mx-auto py-8 px-4 text-slate-900">
+    <div className="max-w-4xl mx-auto py-8 px-4 text-slate-900">
       {/* Header Title */}
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">근무 일정 등록</h1>
