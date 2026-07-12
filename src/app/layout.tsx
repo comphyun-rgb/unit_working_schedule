@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="ko" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-gray-50 text-gray-900 font-sans">
         <header className="w-full bg-white border-b shadow-sm sticky top-0 z-10">
-          <div className="w-full max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+          <div className="w-full px-4 md:px-12 h-16 flex items-center justify-between gap-4">
             <Link href="/" className="font-bold text-lg md:text-xl tracking-tight text-blue-600 shrink-0">
               MyData Work Sync
             </Link>
@@ -32,7 +32,7 @@ export default function RootLayout({
             </nav>
           </div>
         </header>
-        <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 w-full p-4 md:p-12">
           {children}
         </main>
       </body>

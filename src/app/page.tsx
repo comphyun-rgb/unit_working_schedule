@@ -155,7 +155,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 text-slate-900">
+    <div className="max-w-6xl mx-auto py-8 px-4 text-slate-900">
       {/* Header Title */}
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">근무 일정 등록</h1>
@@ -232,7 +232,7 @@ export default function RegisterPage() {
           <div className="flex items-center pb-2 border-b border-gray-200">
             <span className="text-lg font-bold text-gray-800">2. 근태 상태</span>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {STATUS_TYPES.map((type) => {
               const isSelected = status === type;
               return (
@@ -240,7 +240,7 @@ export default function RegisterPage() {
                   type="button"
                   key={type}
                   onClick={() => setStatus(type)}
-                  className={`px-3 py-2 rounded-full text-xs font-semibold border transition-all ${
+                  className={`px-3 py-2 rounded-full text-xs font-semibold border whitespace-nowrap tracking-tight transition-all ${
                     isSelected
                       ? "bg-blue-600 text-white border-blue-600 shadow-md transform scale-105"
                       : "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200"
