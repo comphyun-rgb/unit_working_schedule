@@ -112,20 +112,43 @@ export default function RegisterPage() {
     };
 
     try {
-      const { error } = await supabase.from("work_schedules").insert([payload]);
+      // Check if a record already exists for this date and employee
+      const { data: existingRecords, error: fetchError } = await supabase
+        .from("work_schedules")
+        .select("id")
+        .eq("target_date", date)
+        .eq("employee_name", employee)
+        .limit(1);
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
 
-      // 3. Success behavior: toast alert & reset memo/status fields to initial
-      alert("일정이 등록되었습니다.");
+      if (existingRecords && existingRecords.length > 0) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from("work_schedules")
+          .update(payload)
+          .eq("id", existingRecords[0].id);
+
+        if (updateError) throw updateError;
+        alert("기존에 등록된 일정이 있어 새로운 정보로 업데이트되었습니다.");
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from("work_schedules")
+          .insert([payload]);
+
+        if (insertError) throw insertError;
+        alert("일정이 성공적으로 등록되었습니다.");
+      }
+
+      // Success behavior: reset fields
       setStatus("정상출근");
       setStartTime("9시");
       setEndTime("18시");
       setMemo("");
     } catch (error: any) {
-      // 4. Failure behavior
       console.error(error);
-      alert("등록 실패: " + error.message);
+      alert("처리 실패: " + error.message);
     } finally {
       setIsLoading(false);
     }
