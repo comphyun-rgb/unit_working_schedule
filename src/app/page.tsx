@@ -43,6 +43,7 @@ export default function RegisterPage() {
   const [endTime, setEndTime] = useState("18시");
   const [memo, setMemo] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [existingId, setExistingId] = useState<string | null>(null);
 
   // Initialize date in client side to avoid SSR mismatch
   useEffect(() => {
@@ -52,6 +53,26 @@ export default function RegisterPage() {
     const day = String(today.getDate()).padStart(2, '0');
     setDate(`${year}-${month}-${day}`);
   }, []);
+
+  // Check for existing record when date or employee changes
+  useEffect(() => {
+    const checkExisting = async () => {
+      if (!date || !employee) return;
+      const { data } = await supabase
+        .from("work_schedules")
+        .select("id")
+        .eq("target_date", date)
+        .eq("employee_name", employee)
+        .limit(1);
+      
+      if (data && data.length > 0) {
+        setExistingId(data[0].id);
+      } else {
+        setExistingId(null);
+      }
+    };
+    checkExisting();
+  }, [date, employee]);
 
   const handleCellChange = (newCell: string) => {
     setCell(newCell);
@@ -65,14 +86,31 @@ export default function RegisterPage() {
   const handleLoadPrevious = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // First try to load the record for the selected date
+      let { data, error } = await supabase
         .from("work_schedules")
         .select("*")
+        .eq("target_date", date)
         .eq("employee_name", employee)
-        .order("created_at", { ascending: false })
         .limit(1);
 
       if (error) throw error;
+
+      let isCurrentDate = true;
+
+      // If not found, load the latest record as a template
+      if (!data || data.length === 0) {
+        const { data: latestData, error: latestError } = await supabase
+          .from("work_schedules")
+          .select("*")
+          .eq("employee_name", employee)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        
+        if (latestError) throw latestError;
+        data = latestData;
+        isCurrentDate = false;
+      }
 
       if (data && data.length > 0) {
         const prevRecord = data[0];
@@ -81,13 +119,44 @@ export default function RegisterPage() {
         if (prevRecord.start_time) setStartTime(prevRecord.start_time);
         if (prevRecord.end_time) setEndTime(prevRecord.end_time);
         setMemo(prevRecord.memo || "");
-        alert(`${employee}님의 직전 근무 정보를 불러왔습니다.`);
+        
+        if (isCurrentDate) {
+          alert(`${employee}님의 ${date} 일정을 불러왔습니다.`);
+        } else {
+          alert(`${employee}님의 직전 근무 정보를 불러왔습니다.`);
+        }
       } else {
         alert(`${employee}님의 이전 등록 내역이 없습니다.`);
       }
     } catch (error: any) {
       console.error(error);
       alert("이전 정보를 불러오는 데 실패했습니다: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!existingId) return;
+    if (!confirm(`${date}의 ${employee}님 일정을 삭제하시겠습니까?`)) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("work_schedules")
+        .delete()
+        .eq("id", existingId);
+
+      if (error) throw error;
+      alert("일정이 삭제되었습니다.");
+      setExistingId(null);
+      setStatus("정상출근");
+      setStartTime("9시");
+      setEndTime("18시");
+      setMemo("");
+    } catch (error: any) {
+      console.error(error);
+      alert("삭제 실패: " + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -149,6 +218,17 @@ export default function RegisterPage() {
       setStartTime("9시");
       setEndTime("18시");
       setMemo("");
+
+      // Update existingId so the UI knows there is now an existing record
+      const { data: newData } = await supabase
+        .from("work_schedules")
+        .select("id")
+        .eq("target_date", date)
+        .eq("employee_name", employee)
+        .limit(1);
+      if (newData && newData.length > 0) {
+        setExistingId(newData[0].id);
+      }
     } catch (error: any) {
       console.error(error);
       alert("처리 실패: " + error.message);
@@ -340,17 +420,33 @@ export default function RegisterPage() {
         </section>
 
         {/* Action Button */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={`w-full py-3.5 rounded-xl text-base font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.98] ${
-            isLoading 
-              ? "bg-gray-400 text-gray-200 cursor-not-allowed shadow-none" 
-              : "bg-blue-600 text-white hover:bg-blue-700"
-          }`}
-        >
-          {isLoading ? "처리 중..." : "일정 등록 완료"}
-        </button>
+        <div className="flex gap-3">
+          {existingId && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isLoading}
+              className={`w-1/3 py-3.5 rounded-xl text-base font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.98] ${
+                isLoading 
+                  ? "bg-gray-400 text-gray-200 cursor-not-allowed shadow-none" 
+                  : "bg-red-500 text-white hover:bg-red-600"
+              }`}
+            >
+              일정 삭제
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`flex-1 py-3.5 rounded-xl text-base font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.98] ${
+              isLoading 
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed shadow-none" 
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            }`}
+          >
+            {isLoading ? "처리 중..." : (existingId ? "일정 수정 완료" : "일정 등록 완료")}
+          </button>
+        </div>
       </form>
     </div>
   );
