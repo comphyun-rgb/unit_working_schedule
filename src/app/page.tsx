@@ -155,9 +155,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full py-4 text-slate-900">
+    <div className="w-full px-2 py-2 text-slate-900">
       {/* Header Title */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+      <div className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">근무 일정 등록</h1>
           <p className="text-slate-600 mt-1 text-sm">마이데이터유닛의 일일 근무 현황을 간편하게 등록하세요.</p>
