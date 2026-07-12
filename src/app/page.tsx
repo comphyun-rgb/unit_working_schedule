@@ -47,7 +47,10 @@ export default function RegisterPage() {
   // Initialize date in client side to avoid SSR mismatch
   useEffect(() => {
     const today = new Date();
-    setDate(today.toISOString().split("T")[0]);
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    setDate(`${year}-${month}-${day}`);
   }, []);
 
   const handleCellChange = (newCell: string) => {
