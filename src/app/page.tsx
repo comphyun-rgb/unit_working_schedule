@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+import { supabase } from "@/lib/supabase";
+
 // Hardcoded Data
 const CELLS = ["1셀", "2셀", "3셀"];
 const EMPLOYEES: Record<string, string[]> = {
@@ -40,6 +42,7 @@ export default function RegisterPage() {
   const [startTime, setStartTime] = useState("9시");
   const [endTime, setEndTime] = useState("18시");
   const [memo, setMemo] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Initialize date in client side to avoid SSR mismatch
   useEffect(() => {
@@ -55,50 +58,77 @@ export default function RegisterPage() {
   // Visibility logic for time selection
   const showTimeSelection = !["휴가(전일)", "외근(종일)", "교육"].includes(status);
 
-  // Load previous entry from localStorage
-  const handleLoadPrevious = () => {
-    const localData = localStorage.getItem("mock_schedules");
-    if (!localData) {
-      alert("이전 입력 정보가 존재하지 않습니다.");
-      return;
-    }
-    const allData = JSON.parse(localData);
-    // Find the latest record matching current selected employee
-    const prevRecord = [...allData]
-      .reverse()
-      .find((s: any) => s.employee_name === employee);
+  // Load previous entry from Supabase
+  const handleLoadPrevious = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("work_schedules")
+        .select("*")
+        .eq("employee_name", employee)
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-    if (prevRecord) {
-      setCell(prevRecord.cell_name);
-      setStatus(prevRecord.status_type);
-      if (prevRecord.start_time) setStartTime(prevRecord.start_time);
-      if (prevRecord.end_time) setEndTime(prevRecord.end_time);
-      setMemo(prevRecord.memo || "");
-      alert(`${employee}님의 직전 근무 정보를 불러왔습니다.`);
-    } else {
-      alert(`${employee}님의 이전 등록 내역이 없습니다.`);
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const prevRecord = data[0];
+        setCell(prevRecord.cell_name);
+        setStatus(prevRecord.status_type);
+        if (prevRecord.start_time) setStartTime(prevRecord.start_time);
+        if (prevRecord.end_time) setEndTime(prevRecord.end_time);
+        setMemo(prevRecord.memo || "");
+        alert(`${employee}님의 직전 근무 정보를 불러왔습니다.`);
+      } else {
+        alert(`${employee}님의 이전 등록 내역이 없습니다.`);
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert("이전 정보를 불러오는 데 실패했습니다: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newRecord = {
-      id: crypto.randomUUID(),
+
+    // 2. Validation
+    if (!date || !cell || !employee || !status) {
+      alert("모든 필수 정보(근무 예정일, 소속, 이름, 근태 상태)를 입력해 주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    const payload = {
       target_date: date,
       cell_name: cell,
       employee_name: employee,
       status_type: status,
       start_time: showTimeSelection ? startTime : null,
       end_time: showTimeSelection ? endTime : null,
-      memo: memo,
-      created_at: new Date().toISOString(),
+      memo: memo || null,
     };
-    
-    const existing = JSON.parse(localStorage.getItem("mock_schedules") || "[]");
-    localStorage.setItem("mock_schedules", JSON.stringify([...existing, newRecord]));
-    
-    alert("등록되었습니다!");
-    setMemo("");
+
+    try {
+      const { error } = await supabase.from("work_schedules").insert([payload]);
+
+      if (error) throw error;
+
+      // 3. Success behavior: toast alert & reset memo/status fields to initial
+      alert("일정이 등록되었습니다.");
+      setStatus("정상출근");
+      setStartTime("9시");
+      setEndTime("18시");
+      setMemo("");
+    } catch (error: any) {
+      // 4. Failure behavior
+      console.error(error);
+      alert("등록 실패: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -110,8 +140,9 @@ export default function RegisterPage() {
         <div className="mt-4 flex justify-end">
           <button
             onClick={handleLoadPrevious}
+            disabled={isLoading}
             type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-600 text-blue-600 text-xs font-semibold hover:bg-blue-50 transition-all active:scale-95 shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-600 text-blue-600 text-xs font-semibold hover:bg-blue-50 transition-all active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             🔄 이전 입력 정보 불러오기
           </button>
@@ -283,9 +314,14 @@ export default function RegisterPage() {
         {/* Action Button */}
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3.5 rounded-xl text-base font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg hover:shadow-xl"
+          disabled={isLoading}
+          className={`w-full py-3.5 rounded-xl text-base font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.98] ${
+            isLoading 
+              ? "bg-gray-400 text-gray-200 cursor-not-allowed shadow-none" 
+              : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
         >
-          일정 등록 완료
+          {isLoading ? "처리 중..." : "일정 등록 완료"}
         </button>
       </form>
     </div>

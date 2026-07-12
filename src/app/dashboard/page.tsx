@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { format, addDays, subDays } from "date-fns";
 import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
 
+import { supabase } from "@/lib/supabase";
+
 type Schedule = {
   id: string;
   target_date: string;
@@ -12,19 +14,7 @@ type Schedule = {
   status_type: string;
   start_time: string | null;
   end_time: string | null;
-  memo: string;
-};
-
-// Mock data generation
-const generateMockData = (): Schedule[] => {
-  const today = format(new Date(), "yyyy-MM-dd");
-  return [
-    { id: "1", target_date: today, cell_name: "1셀", employee_name: "김현조", status_type: "정상출근", start_time: "9시", end_time: "18시", memo: "" },
-    { id: "2", target_date: today, cell_name: "2셀", employee_name: "윤원근", status_type: "휴가(전일)", start_time: null, end_time: null, memo: "개인 사정" },
-    { id: "3", target_date: today, cell_name: "3셀", employee_name: "신상수", status_type: "외근(종일)", start_time: null, end_time: null, memo: "A사 미팅" },
-    { id: "4", target_date: today, cell_name: "1셀", employee_name: "공영경", status_type: "휴가(오전)", start_time: "14시", end_time: "18시", memo: "오전 반차" },
-    { id: "5", target_date: today, cell_name: "2셀", employee_name: "오혜인", status_type: "교육", start_time: null, end_time: null, memo: "사내 직무 교육" },
-  ];
+  memo: string | null;
 };
 
 const getBadgeStyle = (status: string) => {
@@ -42,30 +32,38 @@ export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedCell, setSelectedCell] = useState<string>("전체");
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     
-    // Load from localStorage or use mock
-    const localData = localStorage.getItem("mock_schedules");
-    let allData: Schedule[] = [];
-    if (localData) {
-      allData = JSON.parse(localData);
-    } else {
-      allData = generateMockData();
-      localStorage.setItem("mock_schedules", JSON.stringify(allData));
-    }
-    
-    // Filter by selected date
-    const dateStr = format(currentDate, "yyyy-MM-dd");
-    let filtered = allData.filter(s => s.target_date === dateStr);
-    
-    // Filter by cell
-    if (selectedCell !== "전체") {
-      filtered = filtered.filter(s => s.cell_name === selectedCell);
-    }
-    
-    setSchedules(filtered);
+    const fetchSchedules = async () => {
+      setIsLoading(true);
+      try {
+        const dateStr = format(currentDate, "yyyy-MM-dd");
+        
+        let query = supabase
+          .from("work_schedules")
+          .select("*")
+          .eq("target_date", dateStr);
+        
+        if (selectedCell !== "전체") {
+          query = query.eq("cell_name", selectedCell);
+        }
+
+        const { data, error } = await query.order("created_at", { ascending: true });
+
+        if (error) throw error;
+        setSchedules(data || []);
+      } catch (error: any) {
+        console.error(error);
+        alert("데이터를 가져오는 데 실패했습니다: " + error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSchedules();
   }, [currentDate, selectedCell, isAuthenticated]);
 
   const handlePrevDay = () => setCurrentDate(prev => subDays(prev, 1));
@@ -201,7 +199,13 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {schedules.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                    로딩 중...
+                  </td>
+                </tr>
+              ) : schedules.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
                     해당 날짜에 등록된 일정이 없습니다.
