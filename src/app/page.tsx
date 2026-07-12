@@ -155,17 +155,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4 text-slate-900">
+    <div className="w-full max-w-7xl mx-auto py-8 px-4 text-slate-900">
       {/* Header Title */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">근무 일정 등록</h1>
-        <p className="text-slate-600 mt-2 text-sm">마이데이터유닛의 일일 근무 현황을 간편하게 등록하세요.</p>
-        <div className="mt-4 flex justify-end">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">근무 일정 등록</h1>
+          <p className="text-slate-600 mt-2 text-sm">마이데이터유닛의 일일 근무 현황을 간편하게 등록하세요.</p>
+        </div>
+        <div className="shrink-0">
           <button
             onClick={handleLoadPrevious}
             disabled={isLoading}
             type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-600 text-blue-600 text-xs font-semibold hover:bg-blue-50 transition-all active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-blue-600 text-blue-600 text-xs font-semibold hover:bg-blue-50 transition-all active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             🔄 이전 입력 정보 불러오기
           </button>
@@ -180,7 +182,7 @@ export default function RegisterPage() {
           <div className="flex items-center pb-2 border-b border-gray-200">
             <span className="text-lg font-bold text-gray-800">1. 기본 정보</span>
           </div>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">근무 예정일</label>
               <input
@@ -194,13 +196,13 @@ export default function RegisterPage() {
             
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">소속</label>
-              <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 rounded-lg">
+              <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 rounded-lg h-11 items-center">
                 {CELLS.map((c) => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => handleCellChange(c)}
-                    className={`py-2 text-sm font-medium rounded-md transition-all ${
+                    className={`py-1.5 text-sm font-medium rounded-md transition-all ${
                       cell === c
                         ? "bg-white text-blue-600 shadow-sm border border-gray-200/50"
                         : "text-gray-600 hover:bg-white/50"
@@ -217,7 +219,7 @@ export default function RegisterPage() {
               <select
                 value={employee}
                 onChange={(e) => setEmployee(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors h-11"
               >
                 {EMPLOYEES[cell].map((emp) => (
                   <option key={emp} value={emp}>{emp}</option>
@@ -270,7 +272,7 @@ export default function RegisterPage() {
               </button>
             </div>
             
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">시작 시간</label>
                 <div className="grid grid-cols-4 gap-2">
