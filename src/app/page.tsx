@@ -14,7 +14,7 @@ const EMPLOYEES: Record<string, string[]> = {
 };
 
 const STATUS_TYPES = [
-  "정상출근",
+  "유연근무",
   "휴가(전일)",
   "휴가(오전)",
   "휴가(오후)",
@@ -38,9 +38,9 @@ export default function RegisterPage() {
   const [date, setDate] = useState("");
   const [cell, setCell] = useState("1셀");
   const [employee, setEmployee] = useState(EMPLOYEES["1셀"][0]);
-  const [status, setStatus] = useState("정상출근");
-  const [startTime, setStartTime] = useState("9시");
-  const [endTime, setEndTime] = useState("18시");
+  const [status, setStatus] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [memo, setMemo] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [existingId, setExistingId] = useState<string | null>(null);
@@ -80,7 +80,7 @@ export default function RegisterPage() {
   };
 
   // Visibility logic for time selection
-  const showTimeSelection = !["휴가(전일)", "외근(종일)", "교육"].includes(status);
+  const showTimeSelection = status === "유연근무";
 
   // Load previous entry from Supabase
   const handleLoadPrevious = async () => {
@@ -150,9 +150,9 @@ export default function RegisterPage() {
       if (error) throw error;
       alert("일정이 삭제되었습니다.");
       setExistingId(null);
-      setStatus("정상출근");
-      setStartTime("9시");
-      setEndTime("18시");
+      setStatus("");
+      setStartTime("");
+      setEndTime("");
       setMemo("");
     } catch (error: any) {
       console.error(error);
@@ -166,8 +166,8 @@ export default function RegisterPage() {
     e.preventDefault();
 
     // 2. Validation
-    if (!date || !cell || !employee || !status) {
-      alert("모든 필수 정보(근무 예정일, 소속, 이름, 근태 상태)를 입력해 주세요.");
+    if (!date || !cell || !employee) {
+      alert("모든 필수 정보(근무 예정일, 소속, 이름)를 입력해 주세요.");
       return;
     }
 
@@ -177,9 +177,9 @@ export default function RegisterPage() {
       target_date: date,
       cell_name: cell,
       employee_name: employee,
-      status_type: status,
-      start_time: showTimeSelection ? startTime : null,
-      end_time: showTimeSelection ? endTime : null,
+      status_type: status || null,
+      start_time: showTimeSelection ? (startTime || null) : null,
+      end_time: showTimeSelection ? (endTime || null) : null,
       memo: memo || null,
     };
 
@@ -214,9 +214,9 @@ export default function RegisterPage() {
       }
 
       // Success behavior: reset fields
-      setStatus("정상출근");
-      setStartTime("9시");
-      setEndTime("18시");
+      setStatus("");
+      setStartTime("");
+      setEndTime("");
       setMemo("");
 
       // Update existingId so the UI knows there is now an existing record
@@ -324,7 +324,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   key={type}
-                  onClick={() => setStatus(type)}
+                  onClick={() => setStatus(status === type ? "" : type)}
                   className={`px-3 py-2 rounded-full text-xs font-semibold border whitespace-nowrap tracking-tight transition-all ${
                     isSelected
                       ? "bg-blue-600 text-white border-blue-600 shadow-md transform scale-105"
@@ -365,7 +365,7 @@ export default function RegisterPage() {
                       <button
                         type="button"
                         key={time}
-                        onClick={() => setStartTime(time)}
+                        onClick={() => setStartTime(startTime === time ? "" : time)}
                         className={`h-10 rounded-lg text-xs font-medium border transition-all ${
                           isSelected
                             ? "border-2 border-blue-600 bg-blue-50 text-blue-700 font-bold"
@@ -388,7 +388,7 @@ export default function RegisterPage() {
                       <button
                         type="button"
                         key={time}
-                        onClick={() => setEndTime(time)}
+                        onClick={() => setEndTime(endTime === time ? "" : time)}
                         className={`h-10 rounded-lg text-xs font-medium border transition-all ${
                           isSelected
                             ? "border-2 border-blue-600 bg-blue-50 text-blue-700 font-bold"
