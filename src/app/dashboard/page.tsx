@@ -166,9 +166,12 @@ export default function DashboardPage() {
               
               const items = cellSchedules.map(s => {
                 const noTime = ["휴가(전일)", "외근(종일)", "교육"].includes(s.status_type);
-                const timeText = noTime ? "" : ` (${s.start_time || ""} ~ ${s.end_time || ""})`;
+                const hasTime = !!s.start_time || !!s.end_time;
+                const timeText = (!noTime && hasTime) ? ` (${s.start_time || ""} ~ ${s.end_time || ""})` : "";
                 const memoText = s.memo ? ` - ${s.memo}` : "";
-                return `• ${s.employee_name}: [${s.status_type}]${timeText}${memoText}`;
+                const statusText = s.status_type ? `[${s.status_type}] ` : "";
+                const content = `${statusText}${timeText}${memoText}`.trim().replace(/^-\s*/, "");
+                return content ? `• ${s.employee_name}: ${content}` : `• ${s.employee_name}`;
               }).join("\n");
               
               return `■ ${cell}\n${items}`;
@@ -214,7 +217,8 @@ export default function DashboardPage() {
               ) : (
                 schedules.map((schedule) => {
                   const noTime = ["휴가(전일)", "외근(종일)", "교육"].includes(schedule.status_type);
-                  const timeDisplay = noTime 
+                  const hasTime = !!schedule.start_time || !!schedule.end_time;
+                  const timeDisplay = (noTime || !hasTime)
                     ? "-" 
                     : `${schedule.start_time || ""} ~ ${schedule.end_time || ""}`;
 
@@ -225,9 +229,13 @@ export default function DashboardPage() {
                         <span className="ml-2 text-xs text-gray-400 font-normal">{schedule.cell_name}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getBadgeStyle(schedule.status_type)}`}>
-                          {schedule.status_type}
-                        </span>
+                        {schedule.status_type ? (
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getBadgeStyle(schedule.status_type)}`}>
+                            {schedule.status_type}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-600 font-medium">
                         {timeDisplay}

@@ -177,7 +177,7 @@ export default function RegisterPage() {
       target_date: date,
       cell_name: cell,
       employee_name: employee,
-      status_type: status || null,
+      status_type: status || "",
       start_time: showTimeSelection ? (startTime || null) : null,
       end_time: showTimeSelection ? (endTime || null) : null,
       memo: memo || null,
